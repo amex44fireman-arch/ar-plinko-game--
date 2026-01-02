@@ -11,7 +11,7 @@ console.log(`%c AR GAME v${VERSION} LOADED`, 'background: #000; color: #ffd700; 
 if (typeof axios !== 'undefined') axios.defaults.timeout = 60000;
 
 // HARDCODED API URL - Users will connect to this automatically
-const PRODUCTION_API_URL = 'https://your-plinko-server.onrender.com'; // Replace with your actual backend server URL
+const PRODUCTION_API_URL = 'https://ar-plinko-game-x8pc.onrender.com'; // Default server URL
 const CURRENT_ORIGIN = window.location.origin;
 let API_URL = PRODUCTION_API_URL;
 
@@ -235,6 +235,13 @@ async function init() {
     if (logo) {
         logo.style.cursor = 'pointer';
         logo.onclick = handleLogoClick;
+    }
+    
+    // Also add logo click functionality to the game UI header
+    const adminTriggerIcon = document.getElementById('admin-trigger-icon');
+    if (adminTriggerIcon) {
+        adminTriggerIcon.style.cursor = 'pointer';
+        adminTriggerIcon.onclick = handleLogoClick;
     }
 }
 
