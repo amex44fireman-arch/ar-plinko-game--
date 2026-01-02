@@ -11,7 +11,7 @@ console.log(`%c AR GAME v${VERSION} LOADED`, 'background: #000; color: #ffd700; 
 if (typeof axios !== 'undefined') axios.defaults.timeout = 60000;
 
 // HARDCODED API URL - Users will connect to this automatically
-const PRODUCTION_API_URL = 'https://ar-plinko-game-1-ef9c.onrender.com'; // Default server URL
+const PRODUCTION_API_URL = 'https://ar-plinko-game-1-ef9c.onrender.com';
 const CURRENT_ORIGIN = window.location.origin;
 let API_URL = PRODUCTION_API_URL;
 
@@ -20,11 +20,27 @@ async function resolveOptimalAPI() {
     // 1. User Priority: If the user manually set a URL, use it immediately
     const saved = localStorage.getItem('ar_api_url');
     if (saved && saved.startsWith('http')) {
-        console.log('%c 👤 [MANUAL MODE] Using user-defined API:', 'color: #ffd700; font-weight: bold;', saved);
+        console.log('👤 [USER] Using manual API URL:', saved);
         return saved;
     }
 
-    console.log('📡 [NETWORK] Using configured API URL:', PRODUCTION_API_URL);
+    console.log('📡 [NETWORK] Optimization Started (Auto-Mode)...');
+
+    // 2. Atomic Fetch Test (Avoids Axios overhead/config issues)
+    const atomicPing = async (url) => {
+        try {
+            const r = await fetch(url + '/api/ping', { mode: 'cors', cache: 'no-cache' });
+            if (r.ok) return true;
+        } catch (e) { }
+        return false;
+    };
+
+    // 3. Try parallel probes
+    try {
+        if (await atomicPing('')) return '';
+        if (await atomicPing(PRODUCTION_API_URL)) return PRODUCTION_API_URL;
+    } catch (e) { }
+
     return PRODUCTION_API_URL;
 }
 
@@ -60,11 +76,6 @@ function handleLogoClick() {
 // Utils moved to top to prevent hoisting errors
 const $ = (id) => document.getElementById(id);
 const showAuth = (mode) => {
-    const ov = $('auth-overlay');
-    if (ov) {
-        ov.style.display = 'flex';
-        ov.style.opacity = '1';
-    }
     const l = $('login-form-container');
     const r = $('register-form-container');
     if (l) l.style.display = mode === 'login' ? 'block' : 'none';
@@ -235,13 +246,6 @@ async function init() {
     if (logo) {
         logo.style.cursor = 'pointer';
         logo.onclick = handleLogoClick;
-    }
-    
-    // Also add logo click functionality to the game UI header
-    const adminTriggerIcon = document.getElementById('admin-trigger-icon');
-    if (adminTriggerIcon) {
-        adminTriggerIcon.style.cursor = 'pointer';
-        adminTriggerIcon.onclick = handleLogoClick;
     }
 }
 
@@ -921,17 +925,11 @@ async function processWin(idx) {
     }
 
     try {
-        // Calculate house commission (10% of bet)
-        const houseCommission = currentBet * 0.10;
-        const effectiveBet = currentBet - houseCommission;
-        
         const res = await axios.post(`${API_URL}/api/game/result`, {
             userId: currentUser.id,
             betAmount: currentBet,
-            effectiveBet: effectiveBet, // Bet amount after commission
             multiplier: mult,
-            multiplierIndex: idx,
-            houseCommission: houseCommission
+            multiplierIndex: idx
         });
 
         if (res.data.success) {
@@ -1143,7 +1141,6 @@ async function renderAdminRevenue(pin) {
 
             const rev = res.data.revenue;
             $('rev-total').textContent = rev.total.toLocaleString() + ' SYP';
-            if ($('rev-net')) $('rev-net').textContent = rev.total.toLocaleString() + ' SYP';
             $('rev-losses').textContent = rev.game_losses.toLocaleString() + ' SYP';
             $('rev-wins').textContent = rev.game_wins.toLocaleString() + ' SYP';
             $('rev-energy').textContent = rev.energy_sales.toLocaleString() + ' SYP';
