@@ -11,7 +11,7 @@ console.log(`%c AR GAME v${VERSION} LOADED`, 'background: #000; color: #ffd700; 
 if (typeof axios !== 'undefined') axios.defaults.timeout = 60000;
 
 // HARDCODED API URL - Users will connect to this automatically
-const PRODUCTION_API_URL = 'https://ar-plinko-game-1yif.onrender.com'; // Default server URL
+const PRODUCTION_API_URL = 'https://ar-plinko-game-1-ef9c.onrender.com'; // Default server URL
 const CURRENT_ORIGIN = window.location.origin;
 let API_URL = PRODUCTION_API_URL;
 
